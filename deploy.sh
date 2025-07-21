@@ -50,7 +50,7 @@ check_and_restart_screen() {
 if [ "$LOCAL" = "$REMOTE" ]; then
     echo "[CI] $(date) — No changes in code."
     check_and_restart_screen "spyglass" "main.py"
-    check_and_restart_screen "flask_app" "web/app.py"
+    check_and_restart_screen "flask_app" ""web/app.py""
     exit 0
 else
     echo "[CI] $(date) — Update detected! Pulling changes..."
@@ -64,7 +64,7 @@ else
         if [ "$session" = "spyglass" ]; then
             screen -dmS "$session" python3 main.py
         else
-            screen -dmS "$session" python3 "web/app.py"
+            screen -dmS "$session" python3 -m web.app
         fi
     done
 
