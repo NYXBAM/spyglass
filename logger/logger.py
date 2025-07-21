@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from flask import jsonify 
 
-DB_FILE = "logs.db"
+DB_FILE = "/home/python-scripts/spyglass/logs.db"
 
 def init_db():
     Path("logger").mkdir(exist_ok=True)
