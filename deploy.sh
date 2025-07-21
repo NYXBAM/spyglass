@@ -1,70 +1,87 @@
 #!/bin/bash
 
+set -e
+
 cd /home/python-scripts/spyglass || exit 1
 
+# --- Конфіг ---
+VENV_DIR="venv"
+SESSION_1="spyglass"
+SESSION_2="flask_app"
+PYTHON_SCRIPT_1="python3 main.py"
+PYTHON_SCRIPT_2="python3 -m web.app"
 export PATH="/usr/bin:/bin:/usr/local/bin:$PATH"
 
-VENV_DIR="venv"
+# --- Стилі ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+log() {
+    echo -e "${CYAN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
+
+
 if [ ! -d "$VENV_DIR" ]; then
-    echo "[CI] $(date) — Virtual environment not found, creating..."
-    python3 -m venv "$VENV_DIR" || exit 1
+    log "${YELLOW}Virtual environment not found, creating...${NC}"
+    python3 -m venv "$VENV_DIR"
 fi
 
-source "$VENV_DIR/bin/activate" || exit 1
-echo "[CI] $(date) — Virtual environment activated."
+source "$VENV_DIR/bin/activate"
+log "${GREEN}Virtual environment activated.${NC}"
 
-echo "[CI] $(date) — Checking for updates..."
-git fetch origin master || exit 1
+
+log "Checking for remote updates..."
+git fetch origin master || { log "${RED}Git fetch failed!${NC}"; exit 1; }
 
 LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse origin/master)
 
-check_and_restart_screen() {
-    local session_name=$1
-    local script_cmd=$2
+restart_screen() {
+    local name="$1"
+    local cmd="$2"
 
-    if screen -list | grep -q "$session_name"; then
-        PID=$(pgrep -f "SCREEN.*$session_name.*python3")
+    if screen -list | grep -q "$name"; then
+        PID=$(pgrep -f "SCREEN.*$name.*python3")
         if [ -n "$PID" ]; then
-            echo "[CI] ✅ $session_name is running (PID $PID)"
+            log "${GREEN}✅ $name is running (PID $PID)${NC}"
         else
-            echo "[CI] ⚠️ '$session_name' screen exists but python3 is not running — restarting..."
-            screen -S "$session_name" -X quit
+            log "${YELLOW}⚠️ '$name' screen exists but python3 not running — restarting...${NC}"
+            screen -S "$name" -X quit || true
             sleep 1
-            screen -dmS "$session_name" $script_cmd
-            echo "[CI] 🔁 $session_name restarted."
+            screen -dmS "$name" $cmd
+            log "${GREEN}🔁 $name restarted.${NC}"
         fi
     else
-        echo "[CI] 🟥 '$session_name' screen session not found — starting..."
-        screen -dmS "$session_name" $script_cmd
-        echo "[CI] ✅ $session_name started."
+        log "${RED}🟥 '$name' screen not found — starting...${NC}"
+        screen -dmS "$name" $cmd
+        log "${GREEN}✅ $name started.${NC}"
     fi
 }
 
-if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "[CI] $(date) — No changes in code."
+if [ "$LOCAL" != "$REMOTE" ]; then
+    log "${YELLOW}Update detected! Pulling...${NC}"
+    git pull --no-edit origin master || { log "${RED}Git pull failed!${NC}"; exit 1; }
+
+    log "Installing/updating dependencies..."
+    pip3 install --upgrade pip
+    pip3 install -r requirements.txt
+
+    log "Restarting screen sessions after update..."
+    screen -S "$SESSION_1" -X quit || true
+    sleep 1
+    screen -dmS "$SESSION_1" $PYTHON_SCRIPT_1
+
+    screen -S "$SESSION_2" -X quit || true
+    sleep 1
+    screen -dmS "$SESSION_2" $PYTHON_SCRIPT_2
+
+    log "${GREEN}✅ Updated and restarted.${NC}"
 else
-    echo "[CI] $(date) — Update detected! Pulling changes..."
-    git pull --no-edit origin master || exit 1
-
-    echo "[CI] $(date) — Installing/updating dependencies..."
-    pip3 install --upgrade pip || exit 1
-    pip3 install -r requirements.txt --upgrade || exit 1
-    echo "[CI] $(date) — Dependencies updated."
-    
-    echo "[CI] $(date) — Restarting screen sessions..."
-    screen -S "spyglass" -X quit
-    sleep 1
-    screen -dmS "spyglass" python3 main.py
-
-    screen -S "flask_app" -X quit
-    sleep 1
-    screen -dmS "flask_app" python3 -m web.app
-
-    echo "[CI] $(date) — ✅ Updated and restarted."
-    exit 0
+    log "${GREEN}No changes detected.${NC}"
 fi
 
-# Перевірка, якщо вже все оновлено — просто переконатись, що процеси працюють
-check_and_restart_screen "spyglass" "python3 main.py"
-check_and_restart_screen "flask_app" "python3 -m web.app"
+restart_screen "$SESSION_1" "$PYTHON_SCRIPT_1"
+restart_screen "$SESSION_2" "$PYTHON_SCRIPT_2"
