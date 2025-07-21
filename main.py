@@ -1,6 +1,6 @@
 # Add new feature
 
-# Co-authored-by: testuser <happymeal@adminska.cc>
+# Co-authored-by: NYXBAM NYXBAM@proton.me
 import time
 from monitor.ping import check_ping
 from monitor.http import check_http
