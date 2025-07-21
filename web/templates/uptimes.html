@@ -48,14 +48,14 @@
         const startTime = new Date(now.getTime() - hoursToShow * 60 * 60 * 1000);
         const timeLabels = [];
         for (let t = startTime.getTime(); t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
-            timeLabels.push(new Date(t).toISOString().slice(0, -5)); // Беремо лише до секунд, без "Z" для спрощення
+            timeLabels.push(new Date(t).toISOString().slice(0, -8)); // Обрізаємо до секунд
         }
     
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
           grouped[entry.target].push({
-              time: new Date(entry.timestamp).toISOString().slice(0, -5), // Синхронізація формату
+              time: new Date(entry.timestamp).toISOString().slice(0, -8), // Синхронізація формату
               status: entry.status === "up" ? 0.5 : -0.5
           });
         });
@@ -67,11 +67,12 @@
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
-            while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= new Date(labelTime).getTime()) {
-                lastStatus = logs[logIndex].status;
-                logIndex++;
-            }
-            dataPoints.push(lastStatus);
+              const labelTimeMs = new Date(labelTime).getTime();
+              while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= labelTimeMs) {
+                  lastStatus = logs[logIndex].status;
+                  logIndex++;
+              }
+              dataPoints.push(lastStatus);
           }
       
           const upCount = dataPoints.filter(v => v === 0.5).length;
@@ -90,7 +91,7 @@
           });
         }
     
-        const labels = timeLabels.map(d => d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+        const labels = timeLabels.map(d => new Date(d).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     
         new Chart(document.getElementById("uptimeChart"), {
           type: "line",
