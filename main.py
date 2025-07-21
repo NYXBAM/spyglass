@@ -1,6 +1,3 @@
-# Add new feature
-
-# Co-authored-by: NYXBAM NYXBAM@proton.me
 import time
 from monitor.ping import check_ping
 from monitor.http import check_http
@@ -9,6 +6,7 @@ import yaml
 import os
 from dotenv import load_dotenv
 from logger.logger import init_db, log_event
+from logger.webhook import send_webhook
 
 load_dotenv()
 init_db()
@@ -36,12 +34,19 @@ while True:
         if last_ok is None or last_ok != current_ok:
             if not current_ok:
                 print(f"❗ {name} FAILED!")
+                
                 if config["telegram_alerts"]:
                     send_telegram_alert(f"❗ {name} DOWN!")
+                if config["webhooks"]:
+                    send_webhook(t, "down")
+            
             else:
                 print(f"✅ {name} is back online!")
+                
                 if config["telegram_alerts"]:
                     send_telegram_alert(f"✅ {name} is back online!")
+                if config["webhooks"]:
+                    send_webhook(t, "up")
             last_status[name] = current_ok
     time.sleep(config["check_interval"])
 

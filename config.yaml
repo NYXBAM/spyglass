@@ -1,6 +1,7 @@
 check_interval: 60  # сек
 
 telegram_alerts: true
+webhooks: false
 
 targets:
   - name: Main-Burdela
@@ -11,6 +12,14 @@ targets:
     type: http
     url: http://192.168.0.179/
 
+webhooks:
+  - url: "https://webhook.site/your-unique-url"
+    payload:
+      target: "{name}"
+      status: "{status}"
+      host: "{host}"
+      timestamp: "{timestamp}"
+      type: "{type}"
 
 
   
