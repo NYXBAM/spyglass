@@ -1,6 +1,6 @@
 import sqlite3
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import jsonify 
 
 DB_FILE = "/home/python-scripts/spyglass/logs.db"
