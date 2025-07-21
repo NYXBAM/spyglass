@@ -63,6 +63,8 @@
     
         const datasets = [];
         for (const [target, logs] of Object.entries(grouped)) {
+          console.log(logs) // DEBUGs
+
           const dataPoints = [];
           let lastStatus = 0;
           let logIndex = 0;
