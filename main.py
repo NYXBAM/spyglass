@@ -14,7 +14,7 @@ with open("config.yaml") as f:
     config = yaml.safe_load(f)
 
 
-# TEST CI / CD 
+
 def run_check(target):
     if target["type"] == "ping":
         return check_ping(target["host"])
