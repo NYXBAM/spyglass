@@ -41,6 +41,7 @@
     fetch("/uptime-data", { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
+        console.log("Received data:", data); // Діагностика
         const intervalMinutes = 5; 
         const hoursToShow = 24;
     
@@ -55,16 +56,20 @@
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
-          grouped[entry.target].push({
-              time: new Date(entry.timestamp + 'Z').toISOString().slice(0, -8),
-              status: entry.status === "up" ? 0.5 : -0.5
-          });
+          try {
+              const time = new Date(entry.timestamp).toISOString().slice(0, -8); // Спроба парсингу
+              grouped[entry.target].push({
+                  time: time,
+                  status: entry.status === "up" ? 0.5 : -0.5
+              });
+          } catch (e) {
+              console.error("Invalid date for entry:", entry, e); // Логування помилок
+          }
         });
     
         const datasets = [];
         for (const [target, logs] of Object.entries(grouped)) {
-          console.log(logs) // DEBUGs
-
+          console.log("Processing target:", target, "logs:", logs); // Діагностика
           const dataPoints = [];
           let lastStatus = 0;
           let logIndex = 0;
@@ -145,7 +150,8 @@
             }
           }
         });
-      });
+      })
+      .catch(error => console.error("Fetch error:", error)); // Логування помилок fetch
   </script>
 </body>
 </html>
