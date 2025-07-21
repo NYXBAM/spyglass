@@ -71,6 +71,9 @@ targets:
 
 ```
 
+<img width="1368" height="363" alt="изображение" src="https://github.com/user-attachments/assets/bb85036a-c275-422e-b275-4c79cec5a557" />
+
+
 ### 🧑‍💻 Contributing
 
 Pull requests are welcome! Feel free to open issues for bugs, features or improvements.
