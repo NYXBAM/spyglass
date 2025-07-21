@@ -24,7 +24,7 @@ def run_check(target):
     return False
 
 last_status = {}
-
+# TEST PROD CI/CD 
 while True:
     for t in config["targets"]:
         name = t["name"]
