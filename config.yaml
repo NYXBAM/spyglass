@@ -8,9 +8,17 @@ targets:
     type: ping
     host: 192.168.0.182
 
-  - name: Gringo-Burdela
+  - name: Main-Gringo-Burdela
     type: http
     url: http://192.168.0.179/
+  
+  - name: Gringo-Data
+    type: http
+    url: http://192.168.0.179/data
+
+  - name: Gringo-Front
+    type: http
+    url: http://192.168.0.182:8000/
 
 webhooks:
   - url: "https://webhook.site/your-unique-url"
