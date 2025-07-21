@@ -1,16 +1,24 @@
 check_interval: 60  # сек
 
 telegram_alerts: true
-webhooks: false
+webhooks_alerts: false
 
 targets:
   - name: Main-Burdela
     type: ping
     host: 192.168.0.182
 
-  - name: Gringo-Burdela
+  - name: Main-Gringo-Burdela
+    type: ping
+    host:  192.168.0.179
+  
+  - name: Gringo-Data
     type: http
-    url: http://192.168.0.179/
+    url: http://192.168.0.179/data
+
+  - name: Gringo-Front
+    type: http
+    url: http://192.168.0.182:8000/
 
 webhooks:
   - url: "https://webhook.site/your-unique-url"

@@ -30,11 +30,11 @@ source "$VENV_DIR/bin/activate"
 log "${GREEN}Virtual environment activated.${NC}"
 
 log "Checking for remote updates..."
-git fetch origin master || exit 1
+git fetch origin prod || exit 1
 
 LOCAL=$(git rev-parse HEAD)
-REMOTE=$(git rev-parse origin/master)
-BASE=$(git merge-base HEAD origin/master)
+REMOTE=$(git rev-parse origin/prod)
+BASE=$(git merge-base HEAD origin/prod)
 
 check_and_restart_screen() {
     local name="$1"
@@ -63,7 +63,7 @@ if [ "$LOCAL" = "$REMOTE" ]; then
 else
     if [ "$LOCAL" = "$BASE" ]; then
         log "${YELLOW}Update detected! Pulling changes...${NC}"
-        git pull --no-edit origin master || exit 1
+        git pull --no-edit origin prod || exit 1
         log "Installing/updating dependencies..."
         pip3 install --upgrade pip
         pip3 install -r requirements.txt
