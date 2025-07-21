@@ -48,15 +48,15 @@
         const startTime = new Date(now.getTime() - hoursToShow * 60 * 60 * 1000);
         const timeLabels = [];
         for (let t = startTime.getTime(); t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
-          timeLabels.push(new Date(t).toISOString());
+            timeLabels.push(new Date(t).toISOString().slice(0, -5)); // Беремо лише до секунд, без "Z" для спрощення
         }
     
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
           grouped[entry.target].push({
-            time: new Date(entry.timestamp).toISOString(),
-            status: entry.status === "up" ? 0.5 : -0.5 
+              time: new Date(entry.timestamp).toISOString().slice(0, -5), // Синхронізація формату
+              status: entry.status === "up" ? 0.5 : -0.5
           });
         });
     
@@ -67,9 +67,9 @@
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
-            while (logIndex < logs.length && logs[logIndex].time <= labelTime) {
-              lastStatus = logs[logIndex].status;
-              logIndex++;
+            while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= new Date(labelTime).getTime()) {
+                lastStatus = logs[logIndex].status;
+                logIndex++;
             }
             dataPoints.push(lastStatus);
           }
