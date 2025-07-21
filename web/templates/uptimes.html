@@ -45,17 +45,18 @@
         const hoursToShow = 24;
     
         const now = new Date();
-        const startTime = new Date(now.getTime() - hoursToShow * 60 * 60 * 1000);
+        const startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
+        const startTimeMs = startTime.getTime() - hoursToShow * 60 * 60 * 1000;
         const timeLabels = [];
-        for (let t = startTime.getTime(); t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
-            timeLabels.push(new Date(t).toISOString().slice(0, -8)); // Обрізаємо до секунд
+        for (let t = startTimeMs; t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
+            timeLabels.push(new Date(t).toISOString().slice(0, -8));
         }
     
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
           grouped[entry.target].push({
-              time: new Date(entry.timestamp).toISOString().slice(0, -8), // Синхронізація формату
+              time: new Date(entry.timestamp + 'Z').toISOString().slice(0, -8),
               status: entry.status === "up" ? 0.5 : -0.5
           });
         });
@@ -67,8 +68,8 @@
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
-              const labelTimeMs = new Date(labelTime).getTime();
-              while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= labelTimeMs) {
+              const labelTimeMs = new Date(labelTime + 'Z').getTime();
+              while (logIndex < logs.length && new Date(logs[logIndex].time + 'Z').getTime() <= labelTimeMs) {
                   lastStatus = logs[logIndex].status;
                   logIndex++;
               }
@@ -91,7 +92,7 @@
           });
         }
     
-        const labels = timeLabels.map(d => new Date(d).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+        const labels = timeLabels.map(d => new Date(d + 'Z').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     
         new Chart(document.getElementById("uptimeChart"), {
           type: "line",
