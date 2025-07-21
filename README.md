@@ -31,6 +31,32 @@ Your lightweight Python-based monitoring tool with alerts via Telegram — perfe
   Human-readable `.yaml` configuration.
 
 ---
+## 🔔 New Feature: Webhook Alerts (v0.2)
+
+Spyglass now supports webhook notifications for real-time integrations!
+
+Whenever a monitored target goes down or comes back online, Spyglass will send a POST request to a configurable webhook URL with full JSON payload — perfect for integration with tools like:
+```
+    Discord / Slack
+    Notion
+    Zapier / n8n
+    Home Assistant
+    Custom dashboards
+```
+
+## 📤 Webhook Payload Example:
+
+``` yaml
+webhooks:
+  - url: "https://webhook.site/your-unique-url"
+    payload:
+      target: "{name}"
+      status: "{status}"
+      host: "{host}"
+      timestamp: "{timestamp}"
+      type: "{type}"
+  
+```
 
 ## 🛠 Installation
 
@@ -58,6 +84,7 @@ Your lightweight Python-based monitoring tool with alerts via Telegram — perfe
 check_interval: 60
 
 telegram_alerts: true 
+webhooks: true
 
 targets:
   - name: Google
@@ -67,6 +94,15 @@ targets:
   - name: Localhost
     type: http
     url: http://127.0.0.1
+
+webhooks:
+  - url: "https://webhook.site/your-unique-url"
+    payload:
+      target: "{name}"
+      status: "{status}"
+      host: "{host}"
+      timestamp: "{timestamp}"
+      type: "{type}"
 
 
 ```
