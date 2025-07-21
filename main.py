@@ -35,9 +35,10 @@ while True:
             if not current_ok:
                 print(f"❗ {name} FAILED!")
                 
+                
                 if config["telegram_alerts"]:
                     send_telegram_alert(f"❗ {name} DOWN!")
-                if config["webhooks"]:
+                if config["webhooks_alerts"]:
                     send_webhook(t, "down")
             
             else:
@@ -45,7 +46,8 @@ while True:
                 
                 if config["telegram_alerts"]:
                     send_telegram_alert(f"✅ {name} is back online!")
-                if config["webhooks"]:
+        
+                if config["webhooks_alerts"]:
                     send_webhook(t, "up")
             last_status[name] = current_ok
     time.sleep(config["check_interval"])

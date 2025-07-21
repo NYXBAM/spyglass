@@ -1,7 +1,7 @@
 check_interval: 60  # сек
 
 telegram_alerts: true
-webhooks: false
+webhooks_alerts: false
 
 targets:
   - name: Main-Burdela
