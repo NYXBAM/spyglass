@@ -58,29 +58,23 @@ check_and_restart_screen() {
     fi
 }
 
-
 if [ "$LOCAL" = "$REMOTE" ]; then
     log "${GREEN}No changes in code.${NC}"
 else
     if [ "$LOCAL" = "$BASE" ]; then
         log "${YELLOW}Update detected! Pulling changes...${NC}"
         git pull --no-edit origin master || exit 1
-
         log "Installing/updating dependencies..."
         pip3 install --upgrade pip
         pip3 install -r requirements.txt
-
         log "Restarting screen sessions..."
         screen -S "$SESSION_1" -X quit || true
         sleep 1
         screen -dmS "$SESSION_1" $PYTHON_SCRIPT_1
-
         screen -S "$SESSION_2" -X quit || true
         sleep 1
         screen -dmS "$SESSION_2" $PYTHON_SCRIPT_2
-
         log "${GREEN}✅ Updated and restarted.${NC}"
-
     elif [ "$REMOTE" = "$BASE" ]; then
         log "${GREEN}Local repo is ahead of remote. No update needed.${NC}"
     else
@@ -88,7 +82,6 @@ else
         exit 1
     fi
 fi
-
 
 check_and_restart_screen "$SESSION_1" "$PYTHON_SCRIPT_1"
 check_and_restart_screen "$SESSION_2" "$PYTHON_SCRIPT_2"
