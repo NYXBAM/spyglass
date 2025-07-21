@@ -50,14 +50,14 @@
         const startTimeMs = startTime.getTime() - hoursToShow * 60 * 60 * 1000;
         const timeLabels = [];
         for (let t = startTimeMs; t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
-            timeLabels.push(new Date(t).toISOString().slice(0, -8));
+            timeLabels.push(new Date(t).toISOString().slice(0, 19)); // Повний UTC формат до секунд
         }
     
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
           try {
-              const time = new Date(entry.timestamp).toISOString().slice(0, -8); // Спроба парсингу
+              const time = new Date(entry.timestamp).toISOString().slice(0, 19); // Парсимо як локальний час і конвертуємо в UTC
               grouped[entry.target].push({
                   time: time,
                   status: entry.status === "up" ? 0.5 : -0.5
@@ -75,8 +75,8 @@
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
-              const labelTimeMs = new Date(labelTime + 'Z').getTime();
-              while (logIndex < logs.length && new Date(logs[logIndex].time + 'Z').getTime() <= labelTimeMs) {
+              const labelTimeMs = new Date(labelTime).getTime();
+              while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= labelTimeMs) {
                   lastStatus = logs[logIndex].status;
                   logIndex++;
               }
@@ -99,7 +99,7 @@
           });
         }
     
-        const labels = timeLabels.map(d => new Date(d + 'Z').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+        const labels = timeLabels.map(d => new Date(d).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     
         new Chart(document.getElementById("uptimeChart"), {
           type: "line",
@@ -151,7 +151,7 @@
           }
         });
       })
-      .catch(error => console.error("Fetch error:", error)); // Логування помилок fetch
+      .catch(error => console.error("Fetch error:", error));
   </script>
 </body>
 </html>

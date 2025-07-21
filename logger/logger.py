@@ -68,15 +68,17 @@ def get_uptime_data(hours=24):
     conn = sqlite3.connect("logs.db")
     cur = conn.cursor()
     
-    time_from = (datetime.utcnow() - timedelta(hours=hours)).isoformat()  
+    time_from = (datetime.utcnow() - timedelta(hours=hours)).replace(tzinfo=timezone.utc).isoformat()  # UTC
     cur.execute("SELECT timestamp, target, status FROM logs WHERE timestamp > ?", (time_from,))
     data = cur.fetchall()
     conn.close()
     
     result = []
     for ts, target, status in data:
+       
+        dt = datetime.fromisoformat(ts).replace(tzinfo=timezone.utc)
         result.append({
-            "timestamp": ts, 
+            "timestamp": dt.isoformat(),  
             "target": target,
             "status": status
         })
