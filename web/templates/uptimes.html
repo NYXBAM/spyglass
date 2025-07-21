@@ -39,39 +39,43 @@
 
   <script>
     fetch("/uptime-data", { cache: "no-store" })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        console.log("Received data:", data); // Діагностика
+        console.log("Received data:", data); 
         const intervalMinutes = 5; 
         const hoursToShow = 24;
     
-        const now = new Date();
-        const startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
-        const startTimeMs = startTime.getTime() - hoursToShow * 60 * 60 * 1000;
+
+        const timestamps = data.map(entry => new Date(entry.timestamp).getTime());
+        const minTime = Math.min(...timestamps) - hoursToShow * 60 * 60 * 1000;
+        const maxTime = Math.max(...timestamps);
         const timeLabels = [];
-        for (let t = startTimeMs; t <= now.getTime(); t += intervalMinutes * 60 * 1000) {
-            timeLabels.push(new Date(t).toISOString().slice(0, 19)); // Повний UTC формат до секунд
+        for (let t = minTime; t <= maxTime; t += intervalMinutes * 60 * 1000) {
+            timeLabels.push(new Date(t).toISOString().slice(0, 19));
         }
     
         const grouped = {};
         data.forEach(entry => {
           if (!grouped[entry.target]) grouped[entry.target] = [];
           try {
-              const time = new Date(entry.timestamp).toISOString().slice(0, 19); // Парсимо як локальний час і конвертуємо в UTC
+              const time = new Date(entry.timestamp).toISOString().slice(0, 19);
               grouped[entry.target].push({
                   time: time,
                   status: entry.status === "up" ? 0.5 : -0.5
               });
           } catch (e) {
-              console.error("Invalid date for entry:", entry, e); // Логування помилок
+              console.error("Invalid date for entry:", entry, e);
           }
         });
     
         const datasets = [];
         for (const [target, logs] of Object.entries(grouped)) {
-          console.log("Processing target:", target, "logs:", logs); // Діагностика
+          console.log("Processing target:", target, "logs:", logs);
           const dataPoints = [];
-          let lastStatus = 0;
+          let lastStatus = 0; 
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
