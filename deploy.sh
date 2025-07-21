@@ -4,7 +4,6 @@ cd /home/python-scripts/spyglass || exit 1
 
 export PATH="/usr/bin:/bin:/usr/local/bin:$PATH"
 
-
 VENV_DIR="venv"
 if [ ! -d "$VENV_DIR" ]; then
     echo "[CI] $(date) — Virtual environment not found, creating..."
@@ -16,7 +15,6 @@ echo "[CI] $(date) — Virtual environment activated."
 pip3 install --upgrade pip || exit 1
 pip3 install -r requirements.txt --upgrade || exit 1
 echo "[CI] $(date) — Dependencies installed."
-
 
 echo "[CI] $(date) — Checking for updates..."
 git fetch origin master || exit 1
@@ -50,7 +48,7 @@ check_and_restart_screen() {
 if [ "$LOCAL" = "$REMOTE" ]; then
     echo "[CI] $(date) — No changes in code."
     check_and_restart_screen "spyglass" "main.py"
-    check_and_restart_screen "flask_app" ""web/app.py""
+    check_and_restart_screen "flask_app" "-m web.app" 
     exit 0
 else
     echo "[CI] $(date) — Update detected! Pulling changes..."
@@ -62,11 +60,10 @@ else
         screen -S "$session" -X quit
         sleep 1
         if [ "$session" = "spyglass" ]; then
-            screen -dmS "$session" python3 main.py
+            check_and_restart_screen "$session" "main.py"
         else
-            screen -dmS "$session" python3 -m web.app
+            check_and_restart_screen "$session" "-m web.app"
         fi
     done
-
     echo "[CI] $(date) — ✅ Updated and restarted."
 fi
