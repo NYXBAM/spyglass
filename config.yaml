@@ -9,8 +9,8 @@ targets:
     host: 192.168.0.182
 
   - name: Main-Gringo-Burdela
-    type: http
-    url: http://192.168.0.179/
+    type: ping
+    host:  192.168.0.179
   
   - name: Gringo-Data
     type: http
