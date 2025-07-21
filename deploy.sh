@@ -34,6 +34,7 @@ git fetch origin master || exit 1
 
 LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse origin/master)
+BASE=$(git merge-base HEAD origin/master)
 
 check_and_restart_screen() {
     local name="$1"
@@ -41,12 +42,11 @@ check_and_restart_screen() {
 
     if screen -list | grep -q "$name"; then
         PID=$(pgrep -f "SCREEN.*$name.*python3")
-
         if [ -n "$PID" ]; then
             log "${GREEN}✅ $name is running (PID $PID)${NC}"
         else
             log "${YELLOW}⚠️ '$name' screen exists but python3 is not running — restarting...${NC}"
-            screen -S "$name" -X quit
+            screen -S "$name" -X quit || true
             sleep 1
             screen -dmS "$name" $cmd
             log "${GREEN}🔁 $name restarted.${NC}"
@@ -62,24 +62,33 @@ check_and_restart_screen() {
 if [ "$LOCAL" = "$REMOTE" ]; then
     log "${GREEN}No changes in code.${NC}"
 else
-    log "${YELLOW}Update detected! Pulling changes...${NC}"
-    git pull --no-edit origin master || exit 1
+    if [ "$LOCAL" = "$BASE" ]; then
+        log "${YELLOW}Update detected! Pulling changes...${NC}"
+        git pull --no-edit origin master || exit 1
 
-    log "Installing/updating dependencies..."
-    pip3 install --upgrade pip
-    pip3 install -r requirements.txt
+        log "Installing/updating dependencies..."
+        pip3 install --upgrade pip
+        pip3 install -r requirements.txt
 
-    log "Restarting screen sessions..."
-    screen -S "$SESSION_1" -X quit || true
-    sleep 1
-    screen -dmS "$SESSION_1" $PYTHON_SCRIPT_1
+        log "Restarting screen sessions..."
+        screen -S "$SESSION_1" -X quit || true
+        sleep 1
+        screen -dmS "$SESSION_1" $PYTHON_SCRIPT_1
 
-    screen -S "$SESSION_2" -X quit || true
-    sleep 1
-    screen -dmS "$SESSION_2" $PYTHON_SCRIPT_2
+        screen -S "$SESSION_2" -X quit || true
+        sleep 1
+        screen -dmS "$SESSION_2" $PYTHON_SCRIPT_2
 
-    log "${GREEN}✅ Updated and restarted.${NC}"
+        log "${GREEN}✅ Updated and restarted.${NC}"
+
+    elif [ "$REMOTE" = "$BASE" ]; then
+        log "${GREEN}Local repo is ahead of remote. No update needed.${NC}"
+    else
+        log "${RED}❌ Local and remote branches have diverged! Manual merge required.${NC}"
+        exit 1
+    fi
 fi
+
 
 check_and_restart_screen "$SESSION_1" "$PYTHON_SCRIPT_1"
 check_and_restart_screen "$SESSION_2" "$PYTHON_SCRIPT_2"
