@@ -1,0 +1,16 @@
+check_interval: 60  # сек
+
+telegram_alerts: true
+
+targets:
+  - name: Main-Burdela
+    type: ping
+    host: 192.168.0.182
+
+  - name: Gringo-Burdela
+    type: http
+    url: http://192.168.0.179/
+
+
+
+  
