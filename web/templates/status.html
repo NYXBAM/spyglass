@@ -42,7 +42,7 @@
 <script>
 async function updateLogs() {
     try {
-        const res = await fetch('/api/logs?limit=4', {cache: "no-store"});
+        const res = await fetch('/api/logs', {cache: "no-store"});
         const logs = await res.json();
 
         const tbody = document.querySelector('#logsTable tbody');
