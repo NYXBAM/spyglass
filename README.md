@@ -1,6 +1,6 @@
 # 🛰 Spyglass
 
-Your lightweight Python-based monitoring tool with alerts via Telegram — perfect for self-hosted, plug-and-play uptime tracking.
+Your lightweight Python-based monitoring tool with alerts via Telegram or Webhooks — perfect for self-hosted, plug-and-play uptime tracking.
 
 ![Python](https://img.shields.io/badge/python-3.7%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
