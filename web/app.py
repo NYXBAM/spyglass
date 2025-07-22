@@ -2,9 +2,12 @@ from flask import Flask, render_template
 from datetime import datetime, timedelta
 from logger.logger import get_logs, init_db, get_uptime_data, get_latest_statuses
 from flask import jsonify, request
-
+import yaml
 
 app = Flask(__name__)
+with open("config.yaml") as f:
+    config = yaml.safe_load(f)
+
 
 @app.route("/")
 def index():
@@ -22,7 +25,8 @@ def uptime_data():
 
 @app.route('/api/logs')
 def api_logs():
-    limit = int(request.args.get('limit', 3))
+    targets_count = len(config["targets"])
+    limit = int(request.args.get('limit', targets_count))
     logs = get_logs(limit)
     result = []
     for ts, target, status, message in logs:
