@@ -24,12 +24,13 @@ def run_check(target):
     return False
 
 last_status = {}
-# TEST PROD CI/CD 
+
 while True:
     for t in config["targets"]:
         name = t["name"]
         current_ok = run_check(t)
-        log_event(name, "up" if current_ok else "down", "Status: Active")
+        status_message = "Status: Active" if current_ok else "Status: Inactive"
+        log_event(name, "up" if current_ok else "down", status_message)
         last_ok = last_status.get(name, None)
         if last_ok is None or last_ok != current_ok:
             if not current_ok:
