@@ -8,7 +8,7 @@ VENV_DIR="venv"
 SESSION_1="spyglass"
 SESSION_2="flask_app"
 PYTHON_SCRIPT_1="python3 main.py"
-PYTHON_SCRIPT_2="cd /web && flask run --host=0.0.0.0 --port=5555"
+PYTHON_SCRIPT_2="cd web && flask run --host=0.0.0.0 --port=5555"
 export PATH="/usr/bin:/bin:/usr/local/bin:$PATH"
 
 RED='\033[0;31m'
