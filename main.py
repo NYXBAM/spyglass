@@ -29,7 +29,7 @@ while True:
     for t in config["targets"]:
         name = t["name"]
         current_ok = run_check(t)
-        log_event(name, "up" if current_ok else "down", "Status")
+        log_event(name, "up" if current_ok else "down", "Status: Active")
         last_ok = last_status.get(name, None)
         if last_ok is None or last_ok != current_ok:
             if not current_ok:
