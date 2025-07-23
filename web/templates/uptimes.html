@@ -5,37 +5,115 @@
   <title>Uptime Monitor</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: sans-serif;
-      background-color: #121212;
-      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%);
+      color: #ffffff;
+      min-height: 100vh;
       padding: 20px;
     }
-    canvas {
-      background-color: #1e1e1e;
-      border-radius: 8px;
-      padding: 10px;
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
     }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding: 20px 0;
+      border-bottom: 2px solid rgba(0, 255, 153, 0.2);
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #00ff99 0%, #00cc7a 100%);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 255, 153, 0.3);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 255, 153, 0.4);
+    }
+    
     h2 {
       color: #00ff99;
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-shadow: 0 0 20px rgba(0, 255, 153, 0.5);
     }
-    .btn {
-      padding: 8px 16px;
-      background: #00ff99;
-      border: none;
-      border-radius: 5px;
-      color: #000;
-      font-weight: bold;
-      text-decoration: none;
-      margin-bottom: 20px;
-      display: inline-block;
+    
+    .chart-container {
+      background: rgba(30, 30, 46, 0.8);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 153, 0.1);
+    }
+    
+    canvas {
+      border-radius: 16px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: rgba(30, 30, 46, 0.6);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(0, 255, 153, 0.2);
+      backdrop-filter: blur(5px);
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #00ff99;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      color: #a0a0a0;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <a href="/" class="btn">⬅ Back to Status</a>
-  <h2>📈 Uptime Monitor </h2>
-  <canvas id="uptimeChart" width="1000" height="400"></canvas>
+  <div class="container">
+    <div class="header">
+      <h2>📈 Uptime Monitor</h2>
+      <a href="/" class="btn">⬅ Back to Status</a>
+    </div>
+    
+    <div class="stats-grid" id="statsGrid">
+      <!-- Stats will be populated here -->
+    </div>
+    
+    <div class="chart-container">
+      <canvas id="uptimeChart" width="1000" height="400"></canvas>
+    </div>
+  </div>
 
   <script>
     fetch("/uptime-data", { cache: "no-store" })
@@ -48,7 +126,6 @@
         const intervalMinutes = 5; 
         const hoursToShow = 24;
     
-
         const timestamps = data.map(entry => new Date(entry.timestamp).getTime());
         const minTime = Math.min(...timestamps) - hoursToShow * 60 * 60 * 1000;
         const maxTime = Math.max(...timestamps);
@@ -64,7 +141,8 @@
               const time = new Date(entry.timestamp).toISOString().slice(0, 19);
               grouped[entry.target].push({
                   time: time,
-                  status: entry.status === "up" ? 0.5 : -0.5
+                  timestamp: new Date(entry.timestamp).getTime(),
+                  status: entry.status === "up"
               });
           } catch (e) {
               console.error("Invalid date for entry:", entry, e);
@@ -72,36 +150,101 @@
         });
     
         const datasets = [];
+        const stats = [];
+        
+        // Generate colors for each target
+        const colors = [
+          '#00ff99', '#ff6b6b', '#4ecdc4', '#45b7d1', 
+          '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8'
+        ];
+        let colorIndex = 0;
+        
         for (const [target, logs] of Object.entries(grouped)) {
           console.log("Processing target:", target, "logs:", logs);
+          
+          // Sort logs by timestamp
+          logs.sort((a, b) => a.timestamp - b.timestamp);
+          
           const dataPoints = [];
           let lastStatus = 0; 
           let logIndex = 0;
         
           for (const labelTime of timeLabels) {
               const labelTimeMs = new Date(labelTime).getTime();
-              while (logIndex < logs.length && new Date(logs[logIndex].time).getTime() <= labelTimeMs) {
-                  lastStatus = logs[logIndex].status;
+              while (logIndex < logs.length && logs[logIndex].timestamp <= labelTimeMs) {
+                  lastStatus = logs[logIndex].status ? 0.5 : -0.5;
                   logIndex++;
               }
               dataPoints.push(lastStatus);
           }
-      
-          const upCount = dataPoints.filter(v => v === 0.5).length;
-          const uptimePercent = dataPoints.length > 0 ? ((upCount / dataPoints.length) * 100).toFixed(1) : 0;
+          
+          // ПРАВИЛЬНИЙ РОЗРАХУНОК АПТАЙМУ - рахуємо час, а не кількість точок
+          let totalUpTime = 0;
+          let totalTime = 0;
+          
+          if (logs.length > 0) {
+            // Сортуємо логи за часом
+            const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp);
+            
+            for (let i = 0; i < sortedLogs.length - 1; i++) {
+              const currentLog = sortedLogs[i];
+              const nextLog = sortedLogs[i + 1];
+              const duration = nextLog.timestamp - currentLog.timestamp;
+              
+              totalTime += duration;
+              if (currentLog.status) {
+                totalUpTime += duration;
+              }
+            }
+            
+            // Додаємо час від останнього запису до поточного моменту
+            if (sortedLogs.length > 0) {
+              const lastLog = sortedLogs[sortedLogs.length - 1];
+              const currentTime = Date.now();
+              const duration = currentTime - lastLog.timestamp;
+              
+              totalTime += duration;
+              if (lastLog.status) {
+                totalUpTime += duration;
+              }
+            }
+          }
+          
+          const uptimePercent = totalTime > 0 ? ((totalUpTime / totalTime) * 100).toFixed(1) : 0;
+          
+          const color = colors[colorIndex % colors.length];
+          colorIndex++;
       
           datasets.push({
             label: `${target} (${uptimePercent}%)`,
             data: dataPoints,
-            borderColor: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`,
-            backgroundColor: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%, 0.2)`,
+            borderColor: color,
+            backgroundColor: color + '40',
             fill: false,
-            tension: 0.4, 
-            borderWidth: 2,
+            tension: 0.1, 
+            borderWidth: 3,
             pointRadius: 0,
-            pointHoverRadius: 0
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: color,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2
+          });
+          
+          stats.push({
+            target: target,
+            uptime: uptimePercent,
+            color: color
           });
         }
+        
+        // Populate stats grid
+        const statsGrid = document.getElementById('statsGrid');
+        statsGrid.innerHTML = stats.map(stat => `
+          <div class="stat-card">
+            <div class="stat-value" style="color: ${stat.color}">${stat.uptime}%</div>
+            <div class="stat-label">${stat.target}</div>
+          </div>
+        `).join('');
     
         const labels = timeLabels.map(d => new Date(d).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     
@@ -113,42 +256,72 @@
           },
           options: {
             responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#ffffff',
+                  font: {
+                    size: 14,
+                    weight: '600'
+                  },
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                },
+                position: 'top'
+              },
+              tooltip: {
+                backgroundColor: 'rgba(30, 30, 46, 0.95)',
+                titleColor: '#00ff99',
+                bodyColor: '#ffffff',
+                borderColor: '#00ff99',
+                borderWidth: 1,
+                cornerRadius: 12,
+                displayColors: true,
+                callbacks: {
+                  label: ctx => `${ctx.dataset.label.split(' (')[0]}: ${ctx.parsed.y === 0.5 ? "🟢 UP" : "🔴 DOWN"}`
+                }
+              }
+            },
             scales: {
               y: {
                 ticks: {
-                  callback: val => val === 0.5 ? "UP" : val === -0.5 ? "DOWN" : "",
-                  color: '#00ff99',
-                  font: { weight: 'bold' }
+                  callback: val => val === 0.5 ? "🟢 UP" : val === -0.5 ? "🔴 DOWN" : "",
+                  color: '#ffffff',
+                  font: { 
+                    weight: '600',
+                    size: 12
+                  }
                 },
                 grid: {
-                  color: '#333'
+                  color: 'rgba(255, 255, 255, 0.1)',
+                  drawBorder: false
+                },
+                border: {
+                  display: false
                 },
                 min: -1,
                 max: 1
               },
               x: {
                 ticks: {
-                  color: '#00ff99',
-                  font: { weight: 'bold' }
+                  color: '#ffffff',
+                  font: { 
+                    weight: '500',
+                    size: 11
+                  },
+                  maxTicksLimit: 12
                 },
                 grid: {
-                  color: '#222'
-                }
-              }
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#00ff99',
-                  font: {
-                    size: 14,
-                    weight: 'bold'
-                  }
-                }
-              },
-              tooltip: {
-                callbacks: {
-                  label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y === 0.5 ? "UP" : "DOWN"}`
+                  color: 'rgba(255, 255, 255, 0.05)',
+                  drawBorder: false
+                },
+                border: {
+                  display: false
                 }
               }
             }
