@@ -152,7 +152,7 @@
         const datasets = [];
         const stats = [];
         
-        
+        // Generate colors for each target
         const colors = [
           '#00ff99', '#ff6b6b', '#4ecdc4', '#45b7d1', 
           '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8'
@@ -162,7 +162,7 @@
         for (const [target, logs] of Object.entries(grouped)) {
           console.log("Processing target:", target, "logs:", logs);
           
-          
+          // Sort logs by timestamp
           logs.sort((a, b) => a.timestamp - b.timestamp);
           
           const dataPoints = [];
@@ -170,7 +170,7 @@
           for (const labelTime of timeLabels) {
               const labelTimeMs = new Date(labelTime).getTime();
               
-             
+              // Знаходимо найближчий запис ДО цього часу
               let lastRelevantLog = null;
               for (let i = logs.length - 1; i >= 0; i--) {
                   if (logs[i].timestamp <= labelTimeMs) {
@@ -179,22 +179,23 @@
                   }
               }
               
-
+              // Якщо є запис - використовуємо його статус, інакше null (не відображаємо)
               if (lastRelevantLog) {
                   dataPoints.push(lastRelevantLog.status ? 0.5 : -0.5);
               } else {
-                  dataPoints.push(null); 
+                  dataPoints.push(null); // null означає що немає даних для цього часу
               }
           }
           
-
+          // ПРАВИЛЬНИЙ РОЗРАХУНОК АПТАЙМУ - рахуємо час, а не кількість точок
           let totalUpTime = 0;
           let totalTime = 0;
           
           if (logs.length > 0) {
-
+            // Сортуємо логи за часом
             const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp);
             
+            // Рахуємо час між записами
             for (let i = 0; i < sortedLogs.length - 1; i++) {
               const currentLog = sortedLogs[i];
               const nextLog = sortedLogs[i + 1];
@@ -206,15 +207,21 @@
               }
             }
             
-
-            if (sortedLogs.length > 0) {
-              const lastLog = sortedLogs[sortedLogs.length - 1];
-              const currentTime = Date.now();
-              const duration = currentTime - lastLog.timestamp;
-              
-              totalTime += duration;
+            // Додаємо час від останнього запису до поточного моменту
+            const lastLog = sortedLogs[sortedLogs.length - 1];
+            const currentTime = Date.now();
+            const durationFromLast = currentTime - lastLog.timestamp;
+            
+            totalTime += durationFromLast;
+            if (lastLog.status) {
+              totalUpTime += durationFromLast;
+            }
+            
+            // Якщо totalTime все ще 0 (тільки один запис), використовуємо мінімальний період
+            if (totalTime === 0) {
+              totalTime = durationFromLast > 0 ? durationFromLast : 1; // мінімум 1мс щоб уникнути ділення на 0
               if (lastLog.status) {
-                totalUpTime += duration;
+                totalUpTime = totalTime;
               }
             }
           }
@@ -241,7 +248,7 @@
             pointHoverBorderColor: '#ffffff',
             pointHoverBorderWidth: 2,
             spanGaps: false,
-            stepped: 'middle' 
+            stepped: 'middle' // Ступінчастий але з середини
           });
           
           stats.push({
@@ -251,7 +258,7 @@
           });
         }
         
-
+        // Populate stats grid
         const statsGrid = document.getElementById('statsGrid');
         statsGrid.innerHTML = stats.map(stat => `
           <div class="stat-card">
