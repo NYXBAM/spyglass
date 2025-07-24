@@ -30,6 +30,9 @@ Your lightweight Python-based monitoring tool with alerts via Telegram or Webhoo
 - 🧠 **Simple Config**  
   Human-readable `.yaml` configuration.
 
+<img width="1246" height="746" alt="изображение" src="https://github.com/user-attachments/assets/f3dc8a44-bb20-41e2-85d6-eab832423626" />
+
+
 ---
 ## 🔔 New Feature: Webhook Alerts (v0.2)
 
