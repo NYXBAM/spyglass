@@ -1,6 +1,7 @@
 import time
 from monitor.ping import check_ping
 from monitor.http import check_http
+from monitor.api import check_api, check_api_value, check_api_freshness
 from notifier.telegram import send_telegram_alert
 import yaml
 import os
@@ -21,6 +22,13 @@ def run_check(target):
         return check_ping(target["host"])
     elif target["type"] == "http":
         return check_http(target["url"])
+    elif target['type'] == 'api':
+        if 'expected_value' in target:
+            return check_api_value(target['url'], target.get('expected_key'), target['expected_value'])
+        elif 'max_seconds' in target:
+            return check_api_freshness(target['url'], target['max_seconds'])
+        else:
+            return check_api(target['url'], target.get('expected_key'))
     return False
 
 last_status = {}
