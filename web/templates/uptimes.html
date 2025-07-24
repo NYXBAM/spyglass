@@ -152,7 +152,7 @@
         const datasets = [];
         const stats = [];
         
-        // Generate colors for each target
+        
         const colors = [
           '#00ff99', '#ff6b6b', '#4ecdc4', '#45b7d1', 
           '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8'
@@ -162,28 +162,37 @@
         for (const [target, logs] of Object.entries(grouped)) {
           console.log("Processing target:", target, "logs:", logs);
           
-          // Sort logs by timestamp
+          
           logs.sort((a, b) => a.timestamp - b.timestamp);
           
           const dataPoints = [];
-          let lastStatus = 0; 
-          let logIndex = 0;
-        
+          
           for (const labelTime of timeLabels) {
               const labelTimeMs = new Date(labelTime).getTime();
-              while (logIndex < logs.length && logs[logIndex].timestamp <= labelTimeMs) {
-                  lastStatus = logs[logIndex].status ? 0.5 : -0.5;
-                  logIndex++;
+              
+             
+              let lastRelevantLog = null;
+              for (let i = logs.length - 1; i >= 0; i--) {
+                  if (logs[i].timestamp <= labelTimeMs) {
+                      lastRelevantLog = logs[i];
+                      break;
+                  }
               }
-              dataPoints.push(lastStatus);
+              
+
+              if (lastRelevantLog) {
+                  dataPoints.push(lastRelevantLog.status ? 0.5 : -0.5);
+              } else {
+                  dataPoints.push(null); 
+              }
           }
           
-          // ПРАВИЛЬНИЙ РОЗРАХУНОК АПТАЙМУ - рахуємо час, а не кількість точок
+
           let totalUpTime = 0;
           let totalTime = 0;
           
           if (logs.length > 0) {
-            // Сортуємо логи за часом
+
             const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp);
             
             for (let i = 0; i < sortedLogs.length - 1; i++) {
@@ -197,7 +206,7 @@
               }
             }
             
-            // Додаємо час від останнього запису до поточного моменту
+
             if (sortedLogs.length > 0) {
               const lastLog = sortedLogs[sortedLogs.length - 1];
               const currentTime = Date.now();
@@ -219,15 +228,20 @@
             label: `${target} (${uptimePercent}%)`,
             data: dataPoints,
             borderColor: color,
-            backgroundColor: color + '40',
+            backgroundColor: color + '15',
             fill: false,
-            tension: 0.1, 
-            borderWidth: 3,
-            pointRadius: 0,
-            pointHoverRadius: 6,
+            tension: 0, 
+            borderWidth: 2,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            pointBackgroundColor: color,
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 1,
             pointHoverBackgroundColor: color,
             pointHoverBorderColor: '#ffffff',
-            pointHoverBorderWidth: 2
+            pointHoverBorderWidth: 2,
+            spanGaps: false,
+            stepped: 'middle' 
           });
           
           stats.push({
@@ -237,7 +251,7 @@
           });
         }
         
-        // Populate stats grid
+
         const statsGrid = document.getElementById('statsGrid');
         statsGrid.innerHTML = stats.map(stat => `
           <div class="stat-card">
@@ -283,19 +297,29 @@
                 cornerRadius: 12,
                 displayColors: true,
                 callbacks: {
-                  label: ctx => `${ctx.dataset.label.split(' (')[0]}: ${ctx.parsed.y === 0.5 ? "🟢 UP" : "🔴 DOWN"}`
+                  label: ctx => {
+                    const serviceName = ctx.dataset.label.split(' (')[0];
+                    const status = ctx.parsed.y === 0.5 ? "🟢 ONLINE" : "🔴 OFFLINE";
+                    const uptime = ctx.dataset.label.match(/\((.+)%\)/)?.[1] || '0';
+                    return `${serviceName}: ${status} (${uptime}% uptime)`;
+                  }
                 }
               }
             },
             scales: {
               y: {
                 ticks: {
-                  callback: val => val === 0.5 ? "🟢 UP" : val === -0.5 ? "🔴 DOWN" : "",
+                  callback: val => {
+                    if (val === 0.5) return "🟢 ONLINE";
+                    if (val === -0.5) return "🔴 OFFLINE";
+                    return "";
+                  },
                   color: '#ffffff',
                   font: { 
                     weight: '600',
                     size: 12
-                  }
+                  },
+                  padding: 10
                 },
                 grid: {
                   color: 'rgba(255, 255, 255, 0.1)',
