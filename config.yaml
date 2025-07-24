@@ -1,3 +1,12 @@
+  # Example 
+
+  # - name: Gringo-API-System
+  #   type: api
+  #   url: http://192.168.0.179/api/system
+  #   expected_key: "key"
+  #   expected_value: "value"
+
+
 check_interval: 60  # сек
 
 telegram_alerts: true
@@ -24,15 +33,6 @@ targets:
     type: api
     url: http://192.168.0.179/data
     max_seconds: 50
-
-    # Example 
-    '''
-  - name: Gringo-API-System
-    type: api
-    url: http://192.168.0.179/api/system
-    expected_key: "key"
-    expected_value: "value"
-    '''
 
 webhooks:
   - url: "https://webhook.site/your-unique-url"
